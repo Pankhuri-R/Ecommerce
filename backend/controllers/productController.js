@@ -29,6 +29,27 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+//get single product details
+exports.getProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      res.status(500).json({
+        success: false,
+        message: "Product does not exist",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      product,
+    });
+  } catch (error) {
+    console.log(`Error: ${error.message}`);
+    res.status(400).send();
+  }
+};
+
 //update product --ADMIN
 exports.updateProduct = async (req, res, next) => {
   try {
