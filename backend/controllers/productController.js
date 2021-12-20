@@ -1,104 +1,73 @@
 const Product = require("../models/productModel");
+const ErrorHandler = require("../utils/errorHandler");
+const catchAsyncErrors = require("../middleware/catchAsyncError");
+const catchAsyncError = require("../middleware/catchAsyncError");
 
 //create a new product - ADMIN
-exports.createProduct = async (req, res, next) => {
-  try {
-    const product = await Product.create(req.body);
+exports.createProduct = catchAsyncError(async (req, res, next) => {
+  const product = await Product.create(req.body);
 
-    res.status(201).json({
-      success: true,
-      product,
-    });
-  } catch (error) {
-    console.log(`Error: ${error.message}`);
-    res.status(400).send();
-  }
-};
+  res.status(201).json({
+    success: true,
+    product,
+  });
+});
 
 //get all the products
-exports.getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.status(200).json({
-      success: true,
-      products,
-    });
-  } catch (error) {
-    console.log(`Error: ${error.message}`);
-    res.status(400).send();
-  }
-};
+exports.getAllProducts = catchAsyncError(async (req, res) => {
+  const products = await Product.find();
+  res.status(200).json({
+    success: true,
+    products,
+  });
+});
 
 //get single product details
-exports.getProduct = async (req, res, next) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      res.status(500).json({
-        success: false,
-        message: "Product does not exist",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      product,
-    });
-  } catch (error) {
-    console.log(`Error: ${error.message}`);
-    res.status(400).send();
+exports.getProduct = catchAsyncError(async (req, res, next) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    return next(new ErrorHandler("Product does not exist", 404));
   }
-};
+
+  res.status(200).json({
+    success: true,
+    product,
+  });
+});
 
 //update product --ADMIN
-exports.updateProduct = async (req, res, next) => {
-  try {
-    let toBeUpdated = await Product.findById(req.params.id);
+exports.updateProduct = catchAsyncError(async (req, res, next) => {
+  let toBeUpdated = await Product.findById(req.params.id);
 
-    if (!toBeUpdated) {
-      return res.status(500).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    toBeUpdated = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    });
-
-    res.status(200).json({
-      success: true,
-      toBeUpdated,
-    });
-  } catch (error) {
-    console.log(`Error: ${error.message}`);
-    res.status(400).send(error.message);
+  if (!toBeUpdated) {
+    return next(new ErrorHandler("Product does not exist", 404));
   }
-};
+
+  toBeUpdated = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  });
+
+  res.status(200).json({
+    success: true,
+    toBeUpdated,
+  });
+});
 
 //delete a product - ADMIN
 
-exports.deleteProduct = async (req, res, next) => {
-  try {
-    const toBeDeleted = await Product.findById(req.params.id);
+exports.deleteProduct = catchAsyncError(async (req, res, next) => {
+  const toBeDeleted = await Product.findById(req.params.id);
 
-    if (!toBeDeleted) {
-      return res.status(500).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    await toBeDeleted.remove();
-
-    res.status(200).json({
-      success: true,
-      message: "Product Deleted Successfully",
-    });
-  } catch (error) {
-    console.log(`Error: ${error.message}`);
-    res.status(400).send(error.message);
+  if (!toBeDeleted) {
+    return next(new ErrorHandler("Product does not exist", 404));
   }
-};
+
+  await toBeDeleted.remove();
+
+  res.status(200).json({
+    success: true,
+    message: "Product Deleted Successfully",
+  });
+});
